@@ -1,6 +1,6 @@
 package model;
 
-public class Client extends Persoana {
+public class Client extends Persoana implements Comparable<Client>{
     private double buget; // bugetul pe care il are clientul la dispozitie (costul total va trebui sa fie <= buget)
 
     public Client (int id, String nume, String telefon, String email, double buget) {
@@ -16,5 +16,11 @@ public class Client extends Persoana {
     @Override
     public String toString() {
         return "Client: " + super.toString() + " | Buget: " + buget;
+    }
+
+    // regula de comparare a 2 clienti pentru sortarea alfabetica
+    @Override
+    public int compareTo(Client client) {
+        return this.getNume().compareTo(client.getNume());
     }
 }
