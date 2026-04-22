@@ -39,6 +39,7 @@ public class EventPlannerService {
                 else {
                     System.out.println("Eroare: Locatia are capacitatea prea mica (" + locatie.getCapacitate() + ") pentru " + eveniment.getNrInvitati() + " invitati.");
                 }
+                return;
             }
         }
         System.out.println("Evenimentul cu ID " + idEveniment + " nu a fost gasit.");
@@ -114,6 +115,49 @@ public class EventPlannerService {
        }
 
        return total;
+    }
+
+    // 7. validare buget (verific daca se incadreaza in bugetul clientului)
+    public void valideazaBuget (int idEveniment) {
+        Eveniment e = gasesteEveniment(idEveniment);
+        if (e != null) { return;}
+
+        double cost = calculeazaCostTotal(idEveniment);
+        double buget = e.getClient().getBuget();
+
+        if (cost <= buget) {
+            e.setStatus("CONFIRMAT");
+            System.out.println("Status: Eveniment confirmat! Cost: " + cost + " / Buget: " + buget);
+        } else {
+            e.setStatus("ANULAT");
+            System.out.println("Status: Eveniment anulat! Depaseste bugetul cu " + (cost - buget) + " RON");
+        }
+    }
+
+    // 8. afisare clienti (sortati alfabetic)
+    public void afiseazaClienti () {
+        System.out.println("\n Lista Clienti:");
+        for (Client c : this.clienti) {
+            System.out.println(c); // se apeleaza automat metoda toString din Client
+        }
+    }
+
+    // 9. filtrare furnizori (ii caut pe cei mai ieftini)
+    public void filtreazaFurnizori (double pretMax) {
+        System.out.println("\n Furnizori cu taxa sub " + pretMax + "RON:");
+        furnizori.stream().filter(f -> f.getPret() <= pretMax).forEach(f -> System.out.println(f.getNume() + " - " + f.getPret() + " RON"));
+    }
+
+    // 10. afiseaza raportul final al unui eveniment
+    public void afiseazaRaportEveniment (int idEveniment) {
+        Eveniment e = gasesteEveniment(idEveniment);
+        if (e != null) {
+            System.out.println("\n Dosar eveniment:");
+            System.out.println(e);
+            System.out.println("Cost total estimat: " + calculeazaCostTotal(idEveniment) + "RON");
+        } else {
+            System.out.println("Evenimentul nu a fost gasit.");
+        }
     }
 
     // metode helper pentru cautare
