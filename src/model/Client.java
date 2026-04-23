@@ -15,7 +15,7 @@ public class Client extends Persoana implements Comparable<Client>{
     // afisare
     @Override
     public String toString() {
-        return "Client: " + super.toString() + " | Buget: " + buget;
+        return id + ". " + "Client: " + super.toString() +  " | Buget: " + buget;
     }
 
     // regula de comparare a 2 clienti pentru sortarea alfabetica

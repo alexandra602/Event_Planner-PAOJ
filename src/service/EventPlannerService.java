@@ -6,6 +6,7 @@ public class EventPlannerService {
     // colectiile nesortate
     private List<Eveniment> evenimente = new ArrayList<>();
     private List<Furnizor> furnizori =  new ArrayList<>();
+    private List<Locatie> locatii = new ArrayList<>();
 
     // colectie sortata
     private SortedSet<Client> clienti = new  TreeSet<>();
@@ -29,20 +30,28 @@ public class EventPlannerService {
     }
 
     // 4. asigneaza locatie (+validarea capacitatii)
-    public void asigneazaLocatie (int idEveniment, Locatie locatie) {
-        for (Eveniment eveniment : this.evenimente) {
-            if (eveniment.getId() == idEveniment) {
-                if (eveniment.getNrInvitati() <= locatie.getCapacitate()) {
-                    eveniment.setLocatie(locatie);
-                    System.out.println("Locatia " + locatie.getNume() + " a fost asignata.");
-                }
-                else {
-                    System.out.println("Eroare: Locatia are capacitatea prea mica (" + locatie.getCapacitate() + ") pentru " + eveniment.getNrInvitati() + " invitati.");
-                }
-                return;
+    public void asigneazaLocatie(int idEveniment, int idLocatie) {
+        Eveniment e = gasesteEveniment(idEveniment);
+
+        // caut locatia in lista
+        Locatie locatieGasita = null;
+        for (Locatie l : locatii) {
+            if (l.getId() == idLocatie) {
+                locatieGasita = l;
+                break;
             }
         }
-        System.out.println("Evenimentul cu ID " + idEveniment + " nu a fost gasit.");
+
+        if (e != null && locatieGasita != null) {
+            if (e.getNrInvitati() <= locatieGasita.getCapacitate()) {
+                e.setLocatie(locatieGasita);
+                System.out.println("   Locatia " + locatieGasita.getNume() + " a fost asignata cu succes!");
+            } else {
+                System.out.println("   Eroare: Locatia e prea mica pentru " + e.getNrInvitati() + " invitati.");
+            }
+        } else {
+            System.out.println("   Eroare: Evenimentul sau Locatia nu au fost gasite!");
+        }
     }
 
     // 5. asociaza furnizor la eveniment
@@ -120,7 +129,10 @@ public class EventPlannerService {
     // 7. validare buget (verific daca se incadreaza in bugetul clientului)
     public void valideazaBuget (int idEveniment) {
         Eveniment e = gasesteEveniment(idEveniment);
-        if (e != null) { return;}
+        if (e == null) {
+            System.out.println("   Eroare: Evenimentul cu ID " + idEveniment + " nu a fost gasit!");
+            return;
+        }
 
         double cost = calculeazaCostTotal(idEveniment);
         double buget = e.getClient().getBuget();
@@ -157,6 +169,26 @@ public class EventPlannerService {
             System.out.println("Cost total estimat: " + calculeazaCostTotal(idEveniment) + "RON");
         } else {
             System.out.println("Evenimentul nu a fost gasit.");
+        }
+    }
+    // 11. adauga locatie
+    public void adaugaLocatie(Locatie locatie) {
+        this.locatii.add(locatie);
+    }
+
+    // 12. afiseaza toate locatiile
+    public void afiseazaLocatii() {
+        System.out.println("--- Catalog Locatii ---");
+        for (Locatie l : locatii) {
+            System.out.println(l.getId() + ". " + l.getNume() + " (Capacitate: " + l.getCapacitate() + ", Pret: " + l.getPret() + " RON)");
+        }
+    }
+
+    // 13. afiseaza toti furnizorii
+    public void afiseazaTotiFurnizorii() {
+        System.out.println("--- Catalog Furnizori ---");
+        for (Furnizor f : furnizori) {
+            System.out.println(f.getId() + ". " + f.getNume() + " - Pret Baza: " + f.getPret() + " RON");
         }
     }
 
