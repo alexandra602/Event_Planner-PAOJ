@@ -8,7 +8,7 @@ public abstract class Eveniment {
     protected String nume; // denumirea evenimentului
     protected LocalDate data;
     protected int nrInvitati; // cate persoane participa; pentru meniuri, capacitate etc.
-    protected String status; // IN_ASTEPTARE, CONFIRMAT, ANULAT
+    protected StatusEveniment status; // IN_ASTEPTARE, CONFIRMAT, ANULAT
 
     // compozitie
     protected Client client;
@@ -22,7 +22,7 @@ public abstract class Eveniment {
         this.nrInvitati = nrInvitati;
         this.client = client;
 
-        this.status = "IN_ASTEPTARE";
+        this.status = StatusEveniment.IN_ASTEPTARE;
         this.locatie = null;
         this.furnizori = new ArrayList<>();
     }
@@ -40,8 +40,8 @@ public abstract class Eveniment {
     public int getNrInvitati() { return nrInvitati;}
     public void setNrInvitati(int nrInvitati) { this.nrInvitati = nrInvitati;}
 
-    public String getStatus() { return status;}
-    public void setStatus(String status) { this.status = status;}
+    public StatusEveniment getStatus() { return status;}
+    public void setStatus(StatusEveniment status) { this.status = status;}
 
     public Client getClient() { return client;}
     public void setClient(Client client) { this.client = client;}

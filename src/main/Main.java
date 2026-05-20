@@ -9,6 +9,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         EventPlannerService service = new EventPlannerService();
 
+        config.DatabaseManager.getConnection();
         populeazaCatalog(service);
 
         boolean continua = true;

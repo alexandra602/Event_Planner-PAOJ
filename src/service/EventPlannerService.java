@@ -15,18 +15,24 @@ public class EventPlannerService {
     public void adaugaClient (Client client) {
         this.clienti.add(client);
         System.out.println("Clientul " + client.getNume() + " a fost adaugat.");
+
+        AuditService.getInstance().logAction("adaugaClient");
     }
 
     // 2. adaugare furnizor in catalogul general
     public void adaugaFurnizor(Furnizor furnizor) {
         this.furnizori.add(furnizor);
         System.out.println("Furnizorul " + furnizor.getNume() + " a fost adaugat.");
+
+        AuditService.getInstance().logAction("adaugaFurnizor");
     }
 
     // 3. creare eveniment
     public void creeazaEveniment (Eveniment eveniment) {
         this.evenimente.add(eveniment);
         System.out.println("Evenimentul " + eveniment.getNume() + " a fost creat.");
+
+        AuditService.getInstance().logAction("creeazaEveniment");
     }
 
     // 4. asigneaza locatie (+validarea capacitatii)
@@ -52,6 +58,8 @@ public class EventPlannerService {
         } else {
             System.out.println("   Eroare: Evenimentul sau Locatia nu au fost gasite!");
         }
+
+        AuditService.getInstance().logAction("asigneazaLocatie");
     }
 
     // 5. asociaza furnizor la eveniment
@@ -63,6 +71,8 @@ public class EventPlannerService {
             e.adaugaFurnizor(f);
             System.out.println("Furnizorul " + f.getNume() + " a fost asociat evenimentului " + e.getNume());
         }
+
+        AuditService.getInstance().logAction("asociazaFurnizor");
     }
 
     // 6. calculul costului total
@@ -123,6 +133,7 @@ public class EventPlannerService {
            total -= ((Conferinta) e).getBugetSponsori();
        }
 
+        AuditService.getInstance().logAction("calculeazaCostTotal");
        return total;
     }
 
@@ -138,12 +149,14 @@ public class EventPlannerService {
         double buget = e.getClient().getBuget();
 
         if (cost <= buget) {
-            e.setStatus("CONFIRMAT");
+            e.setStatus(StatusEveniment.CONFIRMAT);
             System.out.println("Status: Eveniment confirmat! Cost: " + cost + " / Buget: " + buget);
         } else {
-            e.setStatus("ANULAT");
+            e.setStatus(StatusEveniment.ANULAT);
             System.out.println("Status: Eveniment anulat! Depaseste bugetul cu " + (cost - buget) + " RON");
         }
+
+        AuditService.getInstance().logAction("valideazaBuget");
     }
 
     // 8. afisare clienti (sortati alfabetic)
@@ -152,12 +165,16 @@ public class EventPlannerService {
         for (Client c : this.clienti) {
             System.out.println(c); // se apeleaza automat metoda toString din Client
         }
+
+        AuditService.getInstance().logAction("afiseazaClienti");
     }
 
     // 9. filtrare furnizori (ii caut pe cei mai ieftini)
     public void filtreazaFurnizori (double pretMax) {
         System.out.println("\n Furnizori cu taxa sub " + pretMax + "RON:");
         furnizori.stream().filter(f -> f.getPret() <= pretMax).forEach(f -> System.out.println(f.getNume() + " - " + f.getPret() + " RON"));
+
+        AuditService.getInstance().logAction("filtreazaFurnizori");
     }
 
     // 10. afiseaza raportul final al unui eveniment
@@ -170,10 +187,14 @@ public class EventPlannerService {
         } else {
             System.out.println("Evenimentul nu a fost gasit.");
         }
+
+        AuditService.getInstance().logAction("afiseazaRaportEveniment");
     }
     // 11. adauga locatie
     public void adaugaLocatie(Locatie locatie) {
         this.locatii.add(locatie);
+
+        AuditService.getInstance().logAction("adaugaLocatie");
     }
 
     // 12. afiseaza toate locatiile
@@ -182,6 +203,8 @@ public class EventPlannerService {
         for (Locatie l : locatii) {
             System.out.println(l.getId() + ". " + l.getNume() + " (Capacitate: " + l.getCapacitate() + ", Pret: " + l.getPret() + " RON)");
         }
+
+        AuditService.getInstance().logAction("afiseazaLocatii");
     }
 
     // 13. afiseaza toti furnizorii
@@ -190,6 +213,8 @@ public class EventPlannerService {
         for (Furnizor f : furnizori) {
             System.out.println(f.getId() + ". " + f.getNume() + " - Pret Baza: " + f.getPret() + " RON");
         }
+
+        AuditService.getInstance().logAction("afiseazaTotiFurnizorii");
     }
 
     // metode helper pentru cautare
