@@ -1,180 +1,332 @@
 package main;
-import java.util.Scanner;
-import java.time.LocalDate;
+
+import config.DatabaseManager;
+import exception.BugetDepasitException;
 import model.*;
-import service.EventPlannerService;
+import service.*;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Scanner;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        EventPlannerService service = new EventPlannerService();
+        EventPlannerService plannerService = EventPlannerService.getInstance();
 
-        config.DatabaseManager.getConnection();
-        populeazaCatalog(service);
+        // ma conectez la bd
+        DatabaseManager.getConnection();
 
-        boolean continua = true;
-        System.out.println(" --- Bun venit la Event Planner Pro! --- ");
+        while (true) {
+            System.out.println("\n*** SISTEM MANAGEMENT EVENIMENTE ***");
+            System.out.println("1. Adauga Client nou");
+            System.out.println("2. Adauga Locatie noua");
+            System.out.println("3. Adauga Furnizor");
+            System.out.println("4. Planifica Eveniment nou");
+            System.out.println("5. Valideaza Buget Eveniment");
+            System.out.println("6. Asociaza Furnzior la Eveniment");
+            System.out.println("7. Schimba / Asociaza Locatie la Eveniment");
+            System.out.println("0. Iesire");
+            System.out.print("Selecteaza optiunea: ");
 
-        // meniul interactiv
-        while (continua) {
-            System.out.println("\n   *** MENIU PRINCIPAL ***");
-            System.out.println("      1. Adauga client nou");
-            System.out.println("      2. Afiseaza toti clientii");
-            System.out.println("      3. Afiseaza cei mai ieftini furnizori");
-            System.out.println("      4. Creeaza o Petrecere Privata");
-            System.out.println("      5. Calculeaza si valideaza bugetul unui eveniment");
-            System.out.println("      6. Asigneaza o locatie la un eveniment");
-            System.out.println("      7. Asociaza un furnizor la un eveniment");
-            System.out.println("      0. Iesire");
-            System.out.print("      Alege o optiune: ");
+            String optStr = scanner.nextLine();
+            int opt;
+            try {
+                opt = Integer.parseInt(optStr);
+            } catch (NumberFormatException e) {
+                System.out.println("[!] Introdu un numar valid.");
+                continue;
+            }
 
-            int opt =  scanner.nextInt();
-            scanner.nextLine();
+            if (opt == 0) {
+                DatabaseManager.closeConnection();
+                System.out.println("[Sistem] Aplicatie inchisa cu succes. O zi buna!");
+                break;
+            }
 
             switch (opt) {
                 case 1:
-                    int id = service.getClienti().size() + 100;
+                    System.out.println("\n--- ADAUGARE CLIENT ---");
+                    try {
+                        int idClient = ThreadLocalRandom.current().nextInt(1000, 99999); // Generare automata ID
+                        System.out.print("Nume complet: "); String nume = scanner.nextLine();
+                        System.out.print("Numar telefon: "); String tel = scanner.nextLine();
+                        System.out.print("Adresa email: "); String email = scanner.nextLine();
+                        System.out.print("Buget maxim disponibil (RON): "); double buget = Double.parseDouble(scanner.nextLine());
 
-                    System.out.print("Nume Client: ");
-                    String nume =  scanner.nextLine();
-                    System.out.print("Buget (RON): ");
-                    double buget =  scanner.nextDouble();
-                    scanner.nextLine();
-
-                    System.out.print("Telefon: ");
-                    String telefon =  scanner.nextLine();
-                    System.out.print("Email: ");
-                    String email =  scanner.nextLine();
-
-                    Client c = new Client(id, nume, telefon, email, buget);
-                    service.adaugaClient(c);
-
-                    System.out.println("   Client adaugat cu succes! ID alocat: " + id);
+                        plannerService.inregistreazaClient(new Client(idClient, nume, tel, email, buget));
+                    } catch (Exception e) {
+                        System.out.println("[!] Eroare: Ai introdus date invalide.");
+                    }
                     break;
+
                 case 2:
-                    service.afiseazaClienti();
+                    System.out.println("\n--- ADAUGARE LOCAȚIE ---");
+                    try {
+                        int idLocatie = ThreadLocalRandom.current().nextInt(1000, 99999); // Generare automata ID
+                        System.out.print("Denumire locatie: "); String nume = scanner.nextLine();
+                        System.out.print("Oras / Adresa: "); String adr = scanner.nextLine();
+                        System.out.print("Capacitate maxima (numar persoane): "); int cap = Integer.parseInt(scanner.nextLine());
+                        System.out.print("Pret inchiriere/zi (RON): "); double pret = Double.parseDouble(scanner.nextLine());
+                        System.out.print("Nume persoana de contact: "); String mng = scanner.nextLine();
+                        System.out.print("Telefon persoana de contact: "); String telC = scanner.nextLine();
+
+                        plannerService.inregistreazaLocatie(new Locatie(idLocatie, nume, adr, cap, pret, mng, telC));
+                    } catch (Exception e) {
+                        System.out.println("[!] Eroare: Date numerice incorecte.");
+                    }
                     break;
                 case 3:
-                    System.out.print("Pretul maxim cautat: ");
-                    double pret = scanner.nextDouble();
-                    service.filtreazaFurnizori(pret);
-                    break;
-                case 4:
-                    int idEveniment = service.getEvenimente().size() + 1000;
+                    System.out.println("\n--- ADAUGARE FURNIZOR NOU ---");
+                    try {
+                        int idFur = java.util.concurrent.ThreadLocalRandom.current().nextInt(1000, 99999); // ID automat
+                        System.out.print("Nume Furnizor / Companie: "); String numeF = scanner.nextLine();
+                        System.out.print("Numar telefon: "); String telF = scanner.nextLine();
+                        System.out.print("Adresa email: "); String emailF = scanner.nextLine();
+                        System.out.print("Pret de baza / Onorariu (RON): "); double pretF = Double.parseDouble(scanner.nextLine());
+                        System.out.print("Rating initial (1.0 - 5.0): "); double ratingF = Double.parseDouble(scanner.nextLine());
 
-                    System.out.print("ID Client existent (vezi lista la opt. 2): ");
-                    int idClient = scanner.nextInt();
-                    scanner.nextLine();
+                        // aflu tipul furnizorului
+                        System.out.println("\nSelecteaza tipul de furnizor:");
+                        System.out.println("  1. Trupa Muzica");
+                        System.out.println("  2. Fotograf");
+                        System.out.println("  3. Firma Catering");
+                        System.out.println("  4. Candy Bar");
+                        System.out.println("  5. Florist");
+                        System.out.print("Alege tip (1-5): ");
+                        int tipF = Integer.parseInt(scanner.nextLine());
 
-                    Client clientGasit = null;
-                    for (Client client : service.getClienti()) {
-                        if (client.getId() == idClient) {
-                            clientGasit = client;
+                        Furnizor nouFurnizor = null;
+
+                        if (tipF == 1) {
+                            System.out.print("Gen muzical abordat: "); String gen = scanner.nextLine();
+                            System.out.print("Numar membri trupa: "); int membri = Integer.parseInt(scanner.nextLine());
+                            nouFurnizor = new TrupaMuzica(idFur, numeF, telF, emailF, pretF, ratingF, gen, membri);
+                        }
+                        else if (tipF == 2) {
+                            System.out.print("Ofera si servicii video? (true/false): "); boolean vid = Boolean.parseBoolean(scanner.nextLine());
+                            System.out.print("Preț album fizic extra (RON): "); double alb = Double.parseDouble(scanner.nextLine());
+                            System.out.print("Timp livrare materiale (zile): "); int timp = Integer.parseInt(scanner.nextLine());
+                            nouFurnizor = new Fotograf(idFur, numeF, telF, emailF, pretF, ratingF, vid, alb, timp);
+                        }
+                        else if (tipF == 3) {
+                            System.out.print("Pret standard per meniu (RON): "); double pMeniu = Double.parseDouble(scanner.nextLine());
+                            System.out.print("Specific culinar (ex: Italian, Traditional): "); String spec = scanner.nextLine();
+                            System.out.print("Ofera meniuri speciale/vegane? (true/false): "); boolean specM = Boolean.parseBoolean(scanner.nextLine());
+                            nouFurnizor = new FirmaCatering(idFur, numeF, telF, emailF, pretF, ratingF, pMeniu, spec, specM);
+                        }
+                        else if (tipF == 4) {
+                            System.out.print("Tematica Candy Bar (ex: Disney, Vintage): "); String tematicaCandy = scanner.nextLine();
+                            System.out.print("Ofera optiuni vegane? (true/false): "); boolean vegan = Boolean.parseBoolean(scanner.nextLine());
+                            nouFurnizor = new CandyBar(idFur, numeF, telF, emailF, pretF, ratingF, tematicaCandy, vegan);
+                        }
+                        else if (tipF == 5) {
+                            System.out.print("Cost per aranjament (RON): "); double costAranj = Double.parseDouble(scanner.nextLine());
+                            System.out.print("Flori disponibile (separate prin virgula, ex: Trandafiri, Lalele): ");
+                            String floriInput = scanner.nextLine();
+                            // transofrm textul introdus intr-o lista de string-uri
+                            java.util.List<String> listaFlori = java.util.Arrays.asList(floriInput.split("\\s*,\\s*"));
+                            nouFurnizor = new Florist(idFur, numeF, telF, emailF, pretF, ratingF, costAranj, listaFlori);
+                        }
+                        else {
+                            System.out.println("[!] Tip de furnizor invalid.");
                             break;
                         }
+
+                        plannerService.inregistreazaFurnizor(nouFurnizor);
+
+                    } catch (Exception e) {
+                        System.out.println("[!] Eroare: Date introduse incorect.");
                     }
+                    break;
+                case 4:
+                    System.out.println("\n--- PLANIFICARE EVENIMENT ---");
+                    try {
+                        List<Client> clientiDB = ClientDbService.getInstance().citeste();
+                        if (clientiDB.isEmpty()) {
+                            System.out.println("[!] Nu exista clienti in baza de date. Adauga un client mai intai (Optiunea 1).");
+                            break;
+                        }
 
-                    if (clientGasit == null) {
-                        System.out.println("   Eroare: Clientul cu ID " + idClient + " nu exista!");
-                        break;
+                        System.out.println("\nClienti disponibili:");
+                        clientiDB.forEach(c -> System.out.println("  ID: " + c.getId() + " | Nume: " + c.getNume() + " | Buget: " + c.getBuget() + " RON"));
+                        System.out.print("Introdu ID-ul clientului dorit: ");
+                        int idC = Integer.parseInt(scanner.nextLine());
+                        Client clientAles = clientiDB.stream().filter(c -> c.getId() == idC).findFirst().orElse(null);
+                        if (clientAles == null) { System.out.println("[!] ID client invalid."); break; }
+
+                        List<Locatie> locatiiDB = LocatieDbService.getInstance().citeste();
+                        Locatie locatieAleasa = null;
+                        if (locatiiDB.isEmpty()) {
+                            System.out.println("[!] Nu exista locatii in baza de date. Adauga una mai intai (Optiunea 2).");
+                            break;
+                        }
+
+                        System.out.println("\nLocatii disponibile:");
+                        locatiiDB.forEach(l -> System.out.println("  ID: " + l.getId() + " | Nume: " + l.getNume() + " | Capacitate: " + l.getCapacitate() + " locuri"));
+                        System.out.print("Introdu ID-ul locatiei dorite (sau 0 pentru a o asigna mai tarziu): ");
+                        int idL = Integer.parseInt(scanner.nextLine());
+                        if (idL != 0) {
+                            locatieAleasa = locatiiDB.stream().filter(l -> l.getId() == idL).findFirst().orElse(null);
+                            if (locatieAleasa == null) {
+                                System.out.println("[!] ID locatie invalid.");
+                                break;
+                            }
+                        }
+
+                        System.out.println("\nDetalii Eveniment:");
+                        int idEv = ThreadLocalRandom.current().nextInt(1000, 99999); // generez automat id-urile
+                        System.out.print("Numele evenimentului: "); String numeEv = scanner.nextLine();
+                        System.out.print("Numar total de invitati: "); int invitati = Integer.parseInt(scanner.nextLine());
+
+                        if (locatieAleasa != null && invitati > locatieAleasa.getCapacitate()) {
+                            throw new exception.CapacitateDepasitaException("Capacitate depasita! Sala " + locatieAleasa.getNume() + " suportă maxim " + locatieAleasa.getCapacitate() + " persoane.");
+                        }
+
+                        System.out.print("Tip eveniment (1 = Petrecere Privata, 2 = Conferinta): ");
+                        int tip = Integer.parseInt(scanner.nextLine());
+                        Eveniment ev = null;
+
+                        if (tip == 1) {
+                            System.out.print("Tematica: "); String tematica = scanner.nextLine();
+                            System.out.print("Numar copii participanti: "); int nrCopii = Integer.parseInt(scanner.nextLine());
+                            System.out.print("Open Bar (true/false): "); boolean ob = Boolean.parseBoolean(scanner.nextLine());
+                            ev = new PetrecerePrivata(idEv, numeEv, LocalDate.now(), invitati, clientAles, tematica, nrCopii, ob);
+                        } else if (tip == 2) {
+                            System.out.print("Domeniu (ex: IT, Medical): "); String domeniu = scanner.nextLine();
+                            System.out.print("Numar Speakeri: "); int sp = Integer.parseInt(scanner.nextLine());
+                            System.out.print("Durata (numar zile): "); int zile = Integer.parseInt(scanner.nextLine());
+                            System.out.print("Buget primit de la sponsori (RON): "); double spns = Double.parseDouble(scanner.nextLine());
+                            ev = new Conferinta(idEv, numeEv, LocalDate.now(), invitati, clientAles, domeniu, sp, zile, spns);
+                        } else {
+                            System.out.println("[!] Tip invalid.");
+                            break;
+                        }
+
+                        ev.setLocatie(locatieAleasa);
+                        ev.setStatus(StatusEveniment.CONFIRMAT);
+                        plannerService.inregistreazaEveniment(ev);
+
+                    } catch (exception.CapacitateDepasitaException e) {
+                        System.out.println("[!] Eroare: Capacitate depasita! " +  e.getMessage());
                     }
-
-                    System.out.print("Nume Eveniment: ");
-                    String numeEveniment = scanner.nextLine();
-                    System.out.print("Nr Invitati: ");
-                    int nrInvitati = scanner.nextInt();
-                    System.out.print("Nr Copii: ");
-                    int nrCopii = scanner.nextInt();
-                    scanner.nextLine();
-
-                    System.out.print("Tematica: ");
-                    String tematica = scanner.nextLine();
-                    System.out.print("Doriti open bar? [da/nu] ");
-                    String doriti = scanner.nextLine();
-
-                    boolean openBar = doriti.equalsIgnoreCase("da");
-
-                    PetrecerePrivata pp = new PetrecerePrivata(idEveniment, numeEveniment, LocalDate.now(), nrInvitati, clientGasit, tematica, nrCopii, openBar);
-                    service.creeazaEveniment(pp);
-
-                    System.out.println("   Eveniment creat cu succes! ID alocat: " + idEveniment);
+                    catch (Exception e) {
+                        System.out.println("[!] Eroare: Date introduse incorect.");
+                    }
                     break;
                 case 5:
-                    System.out.print("ID Eveniment: ");
-                    int idEv = scanner.nextInt();
-                    service.valideazaBuget(idEv);
+                    System.out.println("\n--- VALIDARE BUGET EVENIMENT ---");
+                    try {
+                        List<Eveniment> evenimenteDB = EvenimentDbService.getInstance().citeste();
+                        if (evenimenteDB.isEmpty()) {
+                            System.out.println("[!] Nu exista evenimente inregistrate in baza de date.");
+                            break;
+                        }
+
+                        System.out.println("Evenimente active:");
+                        evenimenteDB.forEach(e -> System.out.println("  ID: " + e.getId() + " | Nume: " + e.getNume() + " | Client: " + (e.getClient() != null ? e.getClient().getNume() : "Lipsă")));
+
+                        System.out.print("\nIntrodu ID-ul evenimentului pe care vrei sa-l validezi: ");
+                        int idC = Integer.parseInt(scanner.nextLine());
+                        Eveniment evGasit = evenimenteDB.stream().filter(e -> e.getId() == idC).findFirst().orElse(null);
+
+                        if (evGasit != null) {
+                            plannerService.verificaBuget(evGasit);
+                        } else {
+                            System.out.println("[!] Evenimentul nu a fost gasit.");
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("[!] Eroare: ID numeric incorect.");
+                    } catch (BugetDepasitException e) {
+                        System.out.println("[!] Eroare: Buget depasit.");
+                        System.out.println(e.getMessage());
+                    }
                     break;
                 case 6:
-                    System.out.print("ID Eveniment pentru care cautati locatie: ");
-                    int idEvLoc = scanner.nextInt();
+                    System.out.println("\n--- ASOCIERE FURNIZOR LA EVENIMENT ---");
+                    try {
+                        // aleg evenimentul
+                        List<Eveniment> evenimenteDisp = EvenimentDbService.getInstance().citeste();
+                        if (evenimenteDisp.isEmpty()) {
+                            System.out.println("[!] Nu exista evenimente. Creeaza unul intai (Optiunea 3).");
+                            break;
+                        }
+                        System.out.println("Evenimente disponibile:");
+                        evenimenteDisp.forEach(e -> System.out.println("  ID: " + e.getId() + " | Nume: " + e.getNume()));
+                        System.out.print("Introdu ID Eveniment: ");
+                        int idEvAles = Integer.parseInt(scanner.nextLine());
+                        Eveniment evAles = evenimenteDisp.stream().filter(e -> e.getId() == idEvAles).findFirst().orElse(null);
+                        if (evAles == null) { System.out.println("[!] ID Eveniment invalid."); break; }
 
-                    System.out.println("\nIată catalogul agenției:");
-                    service.afiseazaLocatii(); // afisez optiunile de locatii
+                        // aleg furnizorul
+                        List<Furnizor> furnizoriDisp = FurnizorDbService.getInstance().citeste();
+                        if (furnizoriDisp.isEmpty()) {
+                            System.out.println("[!] Nu exista furnizori in baza de date.");
+                            break;
+                        }
+                        System.out.println("\nFurnizori disponibili:");
+                        furnizoriDisp.forEach(f -> System.out.println("  ID: " + f.getId() + " | Nume: " + f.getNume() + " | Tip: " + f.getClass().getSimpleName() + " | Pret: " + f.getPret()));
+                        System.out.print("Introdu ID Furnizor: ");
+                        int idFurAles = Integer.parseInt(scanner.nextLine());
+                        Furnizor furAles = furnizoriDisp.stream().filter(f -> f.getId() == idFurAles).findFirst().orElse(null);
+                        if (furAles == null) { System.out.println("[!] ID Furnizor invalid."); break; }
 
-                    System.out.print("ID-ul Locatiei alese: ");
-                    int idLocatieAleasa = scanner.nextInt();
+                        // salvez asocierea
+                        plannerService.asociazaFurnizorLaEveniment(evAles, furAles);
 
-                    service.asigneazaLocatie(idEvLoc, idLocatieAleasa);
+                    } catch (NumberFormatException e) {
+                        System.out.println("[!] Te rog introdu un numar valid.");
+                    }
                     break;
-
                 case 7:
-                    System.out.print("ID Eveniment: ");
-                    int idEvFur = scanner.nextInt();
+                    System.out.println("\n--- SCHIMBARE / ASIGNARE LOCAȚIE EVENIMENT ---");
+                    try {
+                        // citesc si afisez detaliile evenimentului din db
+                        List<Eveniment> evenimente = EvenimentDbService.getInstance().citeste();
+                        if (evenimente.isEmpty()) {
+                            System.out.println("[!] Nu exista evenimente. Creeaza unul intai (Optiunea 3).");
+                            break;
+                        }
+                        System.out.println("Evenimente active:");
+                        evenimente.forEach(e -> System.out.println("  ID: " + e.getId() + " | Nume: " + e.getNume() +
+                                " | Locatie curenta: " + (e.getLocatie() != null ? e.getLocatie().getNume() : "Niciuna")));
 
-                    System.out.println("\nIată catalogul partenerilor noștri:");
-                    service.afiseazaTotiFurnizorii(); // afisez optiunile de furnizori
+                        System.out.print("\nIntrodu ID-ul evenimentului pe care vrei sa-l modifici: ");
+                        int idEv = Integer.parseInt(scanner.nextLine());
+                        Eveniment evGasit = evenimente.stream().filter(e -> e.getId() == idEv).findFirst().orElse(null);
+                        if (evGasit == null) { System.out.println("[!] Evenimentul nu a fost gasit."); break; }
 
-                    System.out.print("ID-ul Furnizorului dorit: ");
-                    int idFur = scanner.nextInt();
+                        List<Locatie> locatii = LocatieDbService.getInstance().citeste();
+                        System.out.println("\nLocatii disponibile in baza de date:");
+                        locatii.forEach(l -> System.out.println("  ID: " + l.getId() + " | Nume: " + l.getNume() + " (Capacitate: " + l.getCapacitate() + ")"));
 
-                    service.asociazaFurnizor(idEvFur, idFur);
-                    break;
-                case 0:
-                    System.out.println("   Se inchide aplicatia...");
-                    continua = false;
+                        System.out.print("\nIntrodu ID-ul noii locatii alese: ");
+                        int idLoc = Integer.parseInt(scanner.nextLine());
+                        Locatie locAleasa = locatii.stream().filter(l -> l.getId() == idLoc).findFirst().orElse(null);
+                        if (locAleasa == null) { System.out.println("[!] Locatia selectata nu exista."); break; }
+
+                        // validarea capacitatii
+                        if (evGasit.getNrInvitati() > locAleasa.getCapacitate()) {
+                            throw new exception.CapacitateDepasitaException("Capacitate depășită! Sala " + locAleasa.getNume() + " suportă maxim " + locAleasa.getCapacitate() + " persoane.");
+                        }
+
+                        // actualizez obiectul
+                        evGasit.setLocatie(locAleasa);
+                        EvenimentDbService.getInstance().actualizeaza(evGasit);
+                        System.out.println("   [DB] Locatia a fost actualizata cu succes pentru evenimentul '" + evGasit.getNume() + "'!");
+
+                    } catch (exception.CapacitateDepasitaException e) {
+                        System.out.println("[!] Eroare: Capacitate depasita! " + e.getMessage());
+                    }
+                    catch (NumberFormatException e) {
+                        System.out.println("[!] Te rog sa introduci un ID numeric valid.");
+                    } catch (Exception e) {
+                        System.out.println("[!] Eroare la procesarea solicitarii.");
+                    }
                     break;
                 default:
-                    System.out.println("Optiune invalida!");
+                    System.out.println("[!] Optiune invalida. Te rog alege un numar din meniu.");
             }
         }
-        scanner.close();
-    }
-
-    // adaug date in catalog
-    private static void populeazaCatalog (EventPlannerService service) {
-        // locatii
-        service.adaugaLocatie(new Locatie(1, "Ballroom Magic", "Bucuresti", 300, 5000, "Ionut", "07xx"));
-        service.adaugaLocatie(new Locatie(2, "Hotel Marriott", "Bucuresti", 500, 12000, "Maria", "07xx"));
-        service.adaugaLocatie(new Locatie(3, "Restaurantul Din Padure", "Brasov", 100, 2000, "Vasile", "07xx"));
-
-        // furnizori
-        service.adaugaFurnizor(new TrupaMuzica(1, "Trupa Feelings", "07xx", "contact@feelings.ro", 4500, 4, "Pop-Rock", 3));
-        service.adaugaFurnizor(new TrupaMuzica(2, "DJ Alex", "07xx", "dj@alex.ro", 1500, 1, "House", 1));
-        service.adaugaFurnizor(new FirmaCatering(3, "Delicii SRL", "07xx", "office@delicii.com", 1000, 3.5, 150, "International", true));
-        service.adaugaFurnizor(new FirmaCatering(4, "Cantina Studenteasca", "07xx", "cantina@stud.com", 300, 0, 70, "Traditional", false));
-        service.adaugaFurnizor(new Fotograf(5, "Alex Foto", "07xx", "alex@foto.ro", 2500, 4.5, true, 250, 14));
-        service.adaugaFurnizor(new CandyBar(6, "Sweet Tooth", "07xx", "dulce@bar.ro", 1200, 4, "Disney", true));
-
-        // clienti
-        Client c1 = new Client(101, "Zaharia Vasile", "0722111222", "vasile@email.com", 60000);
-        Client c2 = new Client(102, "Andreea Popescu", "0733444555", "andreea@email.com", 15000);
-        Client c3 = new Client(103, "Studentul Zgarcit", "0744999888", "zgarcit@email.com", 3000);
-        service.adaugaClient(c1);
-        service.adaugaClient(c2);
-        service.adaugaClient(c3);
-
-        // evenimente
-        PetrecerePrivata nunta = new PetrecerePrivata(1000, "Nunta Vasile & Maria", LocalDate.now().plusMonths(2), 200, c1, "Eleganta", 15, true);
-        service.creeazaEveniment(nunta);
-        service.asigneazaLocatie(1000, 2);
-        service.asociazaFurnizor(1000, 1);
-        service.asociazaFurnizor(1000, 3);
-        service.asociazaFurnizor(1000, 5);
-
-        PetrecerePrivata majorat = new PetrecerePrivata(1001, "Majorat Andreea", LocalDate.now().plusWeeks(3), 50, c2, "Neon Party", 0, false);
-        service.creeazaEveniment(majorat);
-        service.asigneazaLocatie(1001, 1);
-        service.asociazaFurnizor(1001, 2);
-        service.asociazaFurnizor(1001, 6);
     }
 }

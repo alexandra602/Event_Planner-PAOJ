@@ -24,7 +24,7 @@ public class DatabaseManager {
 
                 // realizam conexiunea la baza de date
                 connection = DriverManager.getConnection(URL, USER, PASSWORD);
-                System.out.println("   [!] Sistem: Conexiunea la Oracle a fost stabilita cu succes!");
+                // System.out.println("   [!] Sistem: Conexiunea la Oracle a fost stabilita cu succes!");
             }
         } catch (ClassNotFoundException e) {
             System.out.println("   [!] EROARE: Driverul JDBC nu a fost gasit!");

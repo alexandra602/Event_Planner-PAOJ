@@ -1,231 +1,119 @@
 package service;
+
+import exception.BugetDepasitException;
 import model.*;
-import java.util.*;
 
 public class EventPlannerService {
-    // colectiile nesortate
-    private List<Eveniment> evenimente = new ArrayList<>();
-    private List<Furnizor> furnizori =  new ArrayList<>();
-    private List<Locatie> locatii = new ArrayList<>();
 
-    // colectie sortata
-    private SortedSet<Client> clienti = new  TreeSet<>();
+    private static EventPlannerService instance;
 
-    // 1. adaugare client
-    public void adaugaClient (Client client) {
-        this.clienti.add(client);
-        System.out.println("Clientul " + client.getNume() + " a fost adaugat.");
+    private EventPlannerService() {}
 
-        AuditService.getInstance().logAction("adaugaClient");
-    }
-
-    // 2. adaugare furnizor in catalogul general
-    public void adaugaFurnizor(Furnizor furnizor) {
-        this.furnizori.add(furnizor);
-        System.out.println("Furnizorul " + furnizor.getNume() + " a fost adaugat.");
-
-        AuditService.getInstance().logAction("adaugaFurnizor");
-    }
-
-    // 3. creare eveniment
-    public void creeazaEveniment (Eveniment eveniment) {
-        this.evenimente.add(eveniment);
-        System.out.println("Evenimentul " + eveniment.getNume() + " a fost creat.");
-
-        AuditService.getInstance().logAction("creeazaEveniment");
-    }
-
-    // 4. asigneaza locatie (+validarea capacitatii)
-    public void asigneazaLocatie(int idEveniment, int idLocatie) {
-        Eveniment e = gasesteEveniment(idEveniment);
-
-        // caut locatia in lista
-        Locatie locatieGasita = null;
-        for (Locatie l : locatii) {
-            if (l.getId() == idLocatie) {
-                locatieGasita = l;
-                break;
-            }
+    public static EventPlannerService getInstance() {
+        if (instance == null) {
+            instance = new EventPlannerService();
         }
-
-        if (e != null && locatieGasita != null) {
-            if (e.getNrInvitati() <= locatieGasita.getCapacitate()) {
-                e.setLocatie(locatieGasita);
-                System.out.println("   Locatia " + locatieGasita.getNume() + " a fost asignata cu succes!");
-            } else {
-                System.out.println("   Eroare: Locatia e prea mica pentru " + e.getNrInvitati() + " invitati.");
-            }
-        } else {
-            System.out.println("   Eroare: Evenimentul sau Locatia nu au fost gasite!");
-        }
-
-        AuditService.getInstance().logAction("asigneazaLocatie");
+        return instance;
     }
 
-    // 5. asociaza furnizor la eveniment
-    public void asociazaFurnizor (int idEveniment, int idFurnizor) {
-        Eveniment e = gasesteEveniment(idEveniment);
-        Furnizor f = gasesteFurnizor(idFurnizor);
-
-        if (e != null && f != null) {
-            e.adaugaFurnizor(f);
-            System.out.println("Furnizorul " + f.getNume() + " a fost asociat evenimentului " + e.getNume());
-        }
-
-        AuditService.getInstance().logAction("asociazaFurnizor");
+    // logica de salvare
+    public void inregistreazaClient(Client client) {
+        ClientDbService.getInstance().adauga(client);
+        AuditService.getInstance().logAction("Inregistrare Client: " + client.getNume());
     }
 
-    // 6. calculul costului total
-    public double calculeazaCostTotal (int idEveniment) {
-        Eveniment e = gasesteEveniment(idEveniment);
+    public void inregistreazaLocatie(Locatie locatie) {
+        LocatieDbService.getInstance().adauga(locatie);
+        AuditService.getInstance().logAction("Inregistrare Locatie: " + locatie.getNume());
+    }
 
-        if (e == null) return 0;
+    public void inregistreazaFurnizor(Furnizor furnizor) {
+        FurnizorDbService.getInstance().adauga(furnizor);
+        AuditService.getInstance().logAction("Inregistrare Furnizor: " + furnizor.getNume());
+    }
 
+    public void inregistreazaEveniment(Eveniment eveniment) {
+        EvenimentDbService.getInstance().adauga(eveniment);
+        AuditService.getInstance().logAction("Creare Eveniment: " + eveniment.getNume());
+    }
+
+    // logica de calcul
+    public double calculeazaCostTotal(Eveniment eveniment) {
         double total = 0;
-        // adaug pretul locatiei
-        if (e.getLocatie() != null) {
-            double l = e.getLocatie().getPret();
-            // daca e conferinta, pretul se plateste pe zi
-            if (e instanceof Conferinta) {
-                l *= ((Conferinta) e).getNrZile();
+
+        // costul locatiei calculat pe baza numarului de zile (daca e conferinta)
+        if (eveniment.getLocatie() != null) {
+            double pretZi = eveniment.getLocatie().getPret();
+            if (eveniment instanceof Conferinta) {
+                total += pretZi * ((Conferinta) eveniment).getNrZile();
+            } else {
+                total += pretZi; // petrecere privata dureaza o singura zi
             }
-            total += l;
         }
 
-        // adaug pretul pentru furnizori
-        for (Furnizor f : e.getFurnizori()) {
-            // adaug taxa de baza
-            total += f.getPret();
+        // costurile specifice ale furnizorilor
+        if (eveniment.getFurnizori() != null) {
+            for (Furnizor f : eveniment.getFurnizori()) {
+                total += f.getPret(); // taxa de baza din clasa furnizor
 
-            // logica pentru catering
-            if (f instanceof FirmaCatering) {
-                FirmaCatering fc = (FirmaCatering) f;
+                if (f instanceof FirmaCatering) {
+                    FirmaCatering catering = (FirmaCatering) f;
+                    double pretMeniu = catering.getPretMeniu();
 
-                if (e instanceof PetrecerePrivata) {
-                    PetrecerePrivata pp = (PetrecerePrivata) e;
-                    int adulti = pp.getNrInvitati() - pp.getNrCopii();
+                    if (eveniment instanceof PetrecerePrivata) {
+                        PetrecerePrivata pp = (PetrecerePrivata) eveniment;
+                        int nrCopii = pp.getNrCopii();
+                        int adulti = pp.getNrInvitati() - nrCopii;
+                        if (adulti < 0) adulti = 0;
 
-                    // mancare adulti + mancare copii (50% din pret)
-                    total += adulti * fc.getPret();
-                    total += pp.getNrCopii() * (fc.getPretMeniu() / 2);
-
-                    // daca ofera open bar
-                    if(pp.isOpenBar()) {
-                        total += adulti * 150;
+                        // pretul meniului de copil e jumatate
+                        total += (adulti * pretMeniu) + (nrCopii * (pretMeniu / 2.0));
+                    } else if (eveniment instanceof Conferinta) {
+                        Conferinta conf = (Conferinta) eveniment;
+                        total += conf.getNrInvitati() * pretMeniu * conf.getNrZile();
                     }
                 }
-                else if (e instanceof Conferinta) {
-                    Conferinta c = (Conferinta) e;
-
-                    // pretul mancarii se calculeaza per zi de conferinta
-                    total += c.getNrInvitati() * fc.getPret() * c.getNrZile();
+                else if (f instanceof Fotograf) {
+                    Fotograf foto = (Fotograf) f;
+                    if (foto.isOferaVideo()) total += foto.getPretVideo();
+                    if (foto.isOferaAlbum()) total += foto.getPretAlbum();
+                }
+                else if (f instanceof Florist) {
+                    total += ((Florist) f).getCostAranjament();
                 }
             }
+        }
 
-            // logica pentru fotograf
-            if (f instanceof Fotograf) {
-                Fotograf fo = (Fotograf) f;
-                if (fo.isOferaVideo()) total += fo.getPretVideo();
-                if (fo.isOferaAlbum()) total += fo.getPretAlbum();
+        // taxe specifice tipului de eveniment
+        if (eveniment instanceof PetrecerePrivata) {
+            PetrecerePrivata pp = (PetrecerePrivata) eveniment;
+            if (pp.isOpenBar()) {
+                int adulti = pp.getNrInvitati() - pp.getNrCopii();
+                if (adulti < 0) adulti = 0;
+                total += adulti * 150.0;
             }
+        } else if (eveniment instanceof Conferinta) {
+            total -= ((Conferinta) eveniment).getBugetSponsori(); // scad bugetul din sponzorizair
         }
-       if (e instanceof Conferinta) {
-           total -= ((Conferinta) e).getBugetSponsori();
-       }
 
-        AuditService.getInstance().logAction("calculeazaCostTotal");
-       return total;
+        return total;
     }
 
-    // 7. validare buget (verific daca se incadreaza in bugetul clientului)
-    public void valideazaBuget (int idEveniment) {
-        Eveniment e = gasesteEveniment(idEveniment);
-        if (e == null) {
-            System.out.println("   Eroare: Evenimentul cu ID " + idEveniment + " nu a fost gasit!");
-            return;
-        }
+    public void verificaBuget(Eveniment eveniment) throws BugetDepasitException {
+        double costTotal = calculeazaCostTotal(eveniment);
+        double bugetClient = eveniment.getClient().getBuget();
 
-        double cost = calculeazaCostTotal(idEveniment);
-        double buget = e.getClient().getBuget();
-
-        if (cost <= buget) {
-            e.setStatus(StatusEveniment.CONFIRMAT);
-            System.out.println("Status: Eveniment confirmat! Cost: " + cost + " / Buget: " + buget);
+        if (costTotal > bugetClient) {
+            throw new BugetDepasitException("Buget depasit pentru '" + eveniment.getNume() +
+                    "'! Cost Total Real: " + costTotal + " RON, Buget maxim alocat de Client: " + bugetClient + " RON.");
         } else {
-            e.setStatus(StatusEveniment.ANULAT);
-            System.out.println("Status: Eveniment anulat! Depaseste bugetul cu " + (cost - buget) + " RON");
+            System.out.println("   [OK] Evenimentul se incadreaza in buget! Cost total: " + costTotal + " RON.");
         }
-
-        AuditService.getInstance().logAction("valideazaBuget");
+        AuditService.getInstance().logAction("Validare Buget Eveniment ID: " + eveniment.getId());
     }
 
-    // 8. afisare clienti (sortati alfabetic)
-    public void afiseazaClienti () {
-        System.out.println("\n Lista Clienti:");
-        for (Client c : this.clienti) {
-            System.out.println(c); // se apeleaza automat metoda toString din Client
-        }
-
-        AuditService.getInstance().logAction("afiseazaClienti");
+    public void asociazaFurnizorLaEveniment(Eveniment eveniment, Furnizor furnizor) {
+        EvenimentDbService.getInstance().asociazaFurnizor(eveniment.getId(), furnizor.getId());
+        AuditService.getInstance().logAction("Asociere furnizor " + furnizor.getNume() + " la " + eveniment.getNume());
     }
-
-    // 9. filtrare furnizori (ii caut pe cei mai ieftini)
-    public void filtreazaFurnizori (double pretMax) {
-        System.out.println("\n Furnizori cu taxa sub " + pretMax + "RON:");
-        furnizori.stream().filter(f -> f.getPret() <= pretMax).forEach(f -> System.out.println(f.getNume() + " - " + f.getPret() + " RON"));
-
-        AuditService.getInstance().logAction("filtreazaFurnizori");
-    }
-
-    // 10. afiseaza raportul final al unui eveniment
-    public void afiseazaRaportEveniment (int idEveniment) {
-        Eveniment e = gasesteEveniment(idEveniment);
-        if (e != null) {
-            System.out.println("\n Dosar eveniment:");
-            System.out.println(e);
-            System.out.println("Cost total estimat: " + calculeazaCostTotal(idEveniment) + "RON");
-        } else {
-            System.out.println("Evenimentul nu a fost gasit.");
-        }
-
-        AuditService.getInstance().logAction("afiseazaRaportEveniment");
-    }
-    // 11. adauga locatie
-    public void adaugaLocatie(Locatie locatie) {
-        this.locatii.add(locatie);
-
-        AuditService.getInstance().logAction("adaugaLocatie");
-    }
-
-    // 12. afiseaza toate locatiile
-    public void afiseazaLocatii() {
-        System.out.println("--- Catalog Locatii ---");
-        for (Locatie l : locatii) {
-            System.out.println(l.getId() + ". " + l.getNume() + " (Capacitate: " + l.getCapacitate() + ", Pret: " + l.getPret() + " RON)");
-        }
-
-        AuditService.getInstance().logAction("afiseazaLocatii");
-    }
-
-    // 13. afiseaza toti furnizorii
-    public void afiseazaTotiFurnizorii() {
-        System.out.println("--- Catalog Furnizori ---");
-        for (Furnizor f : furnizori) {
-            System.out.println(f.getId() + ". " + f.getNume() + " - Pret Baza: " + f.getPret() + " RON");
-        }
-
-        AuditService.getInstance().logAction("afiseazaTotiFurnizorii");
-    }
-
-    // metode helper pentru cautare
-    private Eveniment gasesteEveniment(int idEveniment) {
-        return evenimente.stream().filter(e -> e.getId() == idEveniment).findFirst().orElse(null);
-    }
-    private Furnizor gasesteFurnizor(int idFurnizor) {
-        return furnizori.stream().filter(f -> f.getId() == idFurnizor).findFirst().orElse(null);
-    }
-
-    // getteri
-    public List<Eveniment> getEvenimente() { return this.evenimente;}
-    public SortedSet<Client> getClienti() { return this.clienti;}
 }
