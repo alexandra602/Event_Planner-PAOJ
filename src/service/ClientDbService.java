@@ -25,6 +25,7 @@ public class ClientDbService implements GenericService<Client> {
     public void adauga(Client client) {
         String sql = "INSERT INTO CLIENTI (id, nume, telefon, email, buget) VALUES (?, ?, ?, ?, ?)";
         try (Connection con = DatabaseManager.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+            // setez datele necesare
             ps.setInt(1, client.getId());
             ps.setString(2, client.getNume());
             ps.setString(3, client.getTelefon());
@@ -32,12 +33,13 @@ public class ClientDbService implements GenericService<Client> {
             ps.setDouble(5, client.getBuget());
 
             ps.executeUpdate();
-            System.out.println("   [DB] Clientul " + client.getNume() + " a fost salvat cu succes!");
+            System.out.println("[DB] Clientul " + client.getNume() + " a fost salvat cu succes!");
         } catch (SQLException ex) {
-            System.out.println("    [!] Eroare la adaugarea clientului: " + ex.getMessage());
+            System.out.println("[!] Eroare la adaugarea clientului: " + ex.getMessage());
         }
     }
 
+    // citesc clientii din bd
     @Override
     public List<Client> citeste() {
         List<Client> clienti = new ArrayList<>();
@@ -55,11 +57,12 @@ public class ClientDbService implements GenericService<Client> {
                 clienti.add(c);
             }
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la citirea clientilor: " + e.getMessage());
+            System.out.println("[!] Eroare la citirea clientilor: " + e.getMessage());
         }
         return clienti;
     }
 
+    // actualizez bugetul clientului
     @Override
     public void actualizeaza(Client client) {
         String sql = "UPDATE CLIENTI SET buget = ? WHERE id = ?";
@@ -70,7 +73,7 @@ public class ClientDbService implements GenericService<Client> {
             ps.executeUpdate();
 
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la actualizarea clientului: " + e.getMessage());
+            System.out.println("[!] Eroare la actualizarea clientului: " + e.getMessage());
         }
     }
 
@@ -81,10 +84,10 @@ public class ClientDbService implements GenericService<Client> {
 
             ps.setInt(1, id);
             ps.executeUpdate();
-            System.out.println("   [DB] Clientul cu ID " + id + " a fost sters.");
+            System.out.println("[DB] Clientul cu ID " + id + " a fost sters.");
 
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la stergerea clientului: " +  e.getMessage());
+            System.out.println("[!] Eroare la stergerea clientului: " +  e.getMessage());
         }
     }
 }

@@ -1,0 +1,21 @@
+==================================================
+                     FACTURA
+==================================================
+
+Data emiterii: 09-06-2026 00:17:01
+ID Eveniment: 4111
+Nume Eveniment: Party
+Tip Eveniment: PetrecerePrivata
+Numar Invitati: 96
+
+--- DATE CLIENT ---
+Nume: Blake
+Telefon: 073849398
+Email: blake@email.com
+
+--- DETALII COSTURI ---
+Chirie Locatie (Magnum): 5000.0 RON
+
+--------------------------------------------------
+TOTAL DE PLATA: 5000.0 RON
+--------------------------------------------------

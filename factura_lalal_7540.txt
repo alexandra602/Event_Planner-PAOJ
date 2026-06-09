@@ -1,0 +1,26 @@
+==================================================
+                     FACTURA
+==================================================
+
+Data emiterii: 09-06-2026 00:18:33
+ID Eveniment: 7540
+Nume Eveniment: lalal
+Tip Eveniment: Conferinta
+Numar Invitati: 65
+
+--- DATE CLIENT ---
+Nume: ajajja
+Telefon: akakka
+Email: lallala
+
+--- DETALII COSTURI ---
+Chirie Locatie (akak x 1 zile): 5000.0 RON
+
+Furnizori asociati:
+ - Floraria Bujor [Florist]: 400.0 RON (Taxa de baza)
+
+Reducere Buget Sponsori: -160.0 RON
+
+--------------------------------------------------
+TOTAL DE PLATA: 5340.0 RON
+--------------------------------------------------

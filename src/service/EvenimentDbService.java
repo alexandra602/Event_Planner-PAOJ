@@ -71,17 +71,19 @@ public class EvenimentDbService implements GenericService<Eveniment> {
             }
 
             ps.executeUpdate();
-            System.out.println("   [DB] Evenimentul " + eveniment.getNume() + " a fost salvat!");
+            System.out.println("[DB] Evenimentul " + eveniment.getNume() + " a fost salvat!");
         } catch (SQLException ex) {
-            System.out.println("    [!] Eroare la adaugarea evenimentului: " + ex.getMessage());
+            System.out.println("[!] Eroare la adaugarea evenimentului: " + ex.getMessage());
         }
     }
 
+    // iau evenimentele disponibile din bd
     @Override
     public List<Eveniment> citeste() {
         List<Eveniment> evenimente = new ArrayList<>();
         String sql = "SELECT * FROM EVENIMENTE";
 
+        // iau clientii, locatiile si furnziorii din bd
         List<Client> totiClienti = ClientDbService.getInstance().citeste();
         List<Locatie> toateLocatiile = LocatieDbService.getInstance().citeste();
         List<Furnizor> totiFurnizorii = FurnizorDbService.getInstance().citeste();
@@ -96,6 +98,7 @@ public class EvenimentDbService implements GenericService<Eveniment> {
                 int locatieId = rs.getInt("locatie_id");
                 String tipEveniment = rs.getString("tip_eveniment");
 
+                // caut cientul si locatia asociata
                 Client clientAsociat = totiClienti.stream().filter(c -> c.getId() == clientId).findFirst().orElse(null);
                 Locatie locatieAsociata = toateLocatiile.stream().filter(l -> l.getId() == locatieId).findFirst().orElse(null);
 
@@ -135,11 +138,12 @@ public class EvenimentDbService implements GenericService<Eveniment> {
                 evenimente.add(ev);
             }
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la citirea evenimentelor: " + e.getMessage());
+            System.out.println("[!] Eroare la citirea evenimentelor: " + e.getMessage());
         }
         return evenimente;
     }
 
+    // actualizez locatia si statusul
     @Override
     public void actualizeaza(Eveniment eveniment) {
         String sql = "UPDATE EVENIMENTE SET status = ?, locatie_id = ? WHERE id = ?";
@@ -153,7 +157,7 @@ public class EvenimentDbService implements GenericService<Eveniment> {
             ps.setInt(3, eveniment.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la actualizare: " + e.getMessage());
+            System.out.println("[!] Eroare la actualizare: " + e.getMessage());
         }
     }
 
@@ -164,7 +168,7 @@ public class EvenimentDbService implements GenericService<Eveniment> {
             ps.setInt(1, id);
             ps.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la stergere: " +  e.getMessage());
+            System.out.println("[!] Eroare la stergere: " +  e.getMessage());
         }
     }
 
@@ -175,9 +179,9 @@ public class EvenimentDbService implements GenericService<Eveniment> {
             ps.setInt(1, idEveniment);
             ps.setInt(2, idFurnizor);
             ps.executeUpdate();
-            System.out.println("   [DB] Furnizorul a fost asociat cu succes la eveniment!");
+            System.out.println("[DB] Furnizorul a fost asociat cu succes la eveniment!");
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la asociere: " + e.getMessage());
+            System.out.println("[!] Eroare la asociere: " + e.getMessage());
         }
     }
 }

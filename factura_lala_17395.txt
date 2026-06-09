@@ -1,0 +1,19 @@
+==================================================
+                     FACTURA
+==================================================
+Data emiterii: 09-06-2026 00:12:39
+ID Eveniment: 17395
+Nume Eveniment: lala
+Tip Eveniment: PetrecerePrivata
+Numar Invitati: 76
+
+--- DATE CLIENT ---
+Nume: Test
+Telefon: 9838383
+Email: aslslla
+
+--- DETALII COSTURI ---
+Chirie Locatie (akak): 5000.0 RON
+--------------------------------------------------
+TOTAL DE PLATA: 5000.0 RON
+--------------------------------------------------

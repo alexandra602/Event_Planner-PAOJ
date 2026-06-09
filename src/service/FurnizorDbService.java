@@ -39,12 +39,13 @@ public class FurnizorDbService implements GenericService<Furnizor> {
             ps.setDouble(7, furnizor.getPret());
 
             ps.executeUpdate();
-            System.out.println("   [DB] Furnizorul " + furnizor.getNume() + " a fost salvat cu succes!");
+            System.out.println("[DB] Furnizorul " + furnizor.getNume() + " a fost salvat cu succes!");
         } catch (SQLException ex) {
-            System.out.println("    [!] Eroare la adaugarea furnizorului: " + ex.getMessage());
+            System.out.println("[!] Eroare la adaugarea furnizorului: " + ex.getMessage());
         }
     }
 
+    // iau furnzorii din bd
     @Override
     public List<Furnizor> citeste() {
         List<Furnizor> furnizori = new ArrayList<>();
@@ -60,6 +61,7 @@ public class FurnizorDbService implements GenericService<Furnizor> {
                 double pret = rs.getDouble("pret_baza");
                 double rating = rs.getDouble("rating");
 
+                // aflu tipul real
                 Furnizor f = null;
                 if (tip != null) {
                     switch (tip) {
@@ -79,7 +81,7 @@ public class FurnizorDbService implements GenericService<Furnizor> {
                             f = new model.TrupaMuzica(id, nume, telefon, email, pret, rating, "Cover", 4);
                             break;
                         default:
-                            System.out.println("   [!] Tip de furnizor necunoscut: " + tip);
+                            System.out.println("[!] Tip de furnizor necunoscut: " + tip);
                             break;
                     }
                 }
@@ -89,11 +91,12 @@ public class FurnizorDbService implements GenericService<Furnizor> {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la citirea furnizorilor: " + e.getMessage());
+            System.out.println("[!] Eroare la citirea furnizorilor: " + e.getMessage());
         }
         return furnizori;
     }
 
+    // actualizez pretul
     @Override
     public void actualizeaza(Furnizor furnizor) {
         String sql = "UPDATE FURNIZORI SET pret_baza = ? WHERE id = ?";
@@ -102,7 +105,7 @@ public class FurnizorDbService implements GenericService<Furnizor> {
             ps.setInt(2, furnizor.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la actualizarea furnizorului: " + e.getMessage());
+            System.out.println("[!] Eroare la actualizarea furnizorului: " + e.getMessage());
         }
     }
 
@@ -112,9 +115,9 @@ public class FurnizorDbService implements GenericService<Furnizor> {
         try (Connection con = DatabaseManager.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, id);
             ps.executeUpdate();
-            System.out.println("   [DB] Furnizorul cu ID " + id + " a fost sters.");
+            System.out.println("[DB] Furnizorul cu ID " + id + " a fost sters.");
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la stergerea furnizorului: " +  e.getMessage());
+            System.out.println("[!] Eroare la stergerea furnizorului: " +  e.getMessage());
         }
     }
 }

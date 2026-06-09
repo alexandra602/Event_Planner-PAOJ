@@ -104,10 +104,18 @@ public class EventPlannerService {
         double bugetClient = eveniment.getClient().getBuget();
 
         if (costTotal > bugetClient) {
+            eveniment.setStatus(StatusEveniment.IN_ASTEPTARE);
+            EvenimentDbService.getInstance().actualizeaza(eveniment);
+            AuditService.getInstance().logAction("Validare Buget: esuata pentru Eveniment ID: " + eveniment.getId());
+
             throw new BugetDepasitException("Buget depasit pentru '" + eveniment.getNume() +
                     "'! Cost Total Real: " + costTotal + " RON, Buget maxim alocat de Client: " + bugetClient + " RON.");
         } else {
-            System.out.println("   [OK] Evenimentul se incadreaza in buget! Cost total: " + costTotal + " RON.");
+            eveniment.setStatus(StatusEveniment.CONFIRMAT);
+            EvenimentDbService.getInstance().actualizeaza(eveniment);
+            AuditService.getInstance().logAction("Validare Buget: OK pentru Eveniment ID: " + eveniment.getId());
+
+            System.out.println("[OK] Evenimentul se incadreaza in buget! Cost total: " + costTotal + " RON.");
         }
         AuditService.getInstance().logAction("Validare Buget Eveniment ID: " + eveniment.getId());
     }

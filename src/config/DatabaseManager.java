@@ -27,9 +27,9 @@ public class DatabaseManager {
                 // System.out.println("   [!] Sistem: Conexiunea la Oracle a fost stabilita cu succes!");
             }
         } catch (ClassNotFoundException e) {
-            System.out.println("   [!] EROARE: Driverul JDBC nu a fost gasit!");
+            System.out.println("[!] Eroare: Driverul JDBC nu a fost gasit!");
         } catch (SQLException e) {
-            System.out.println("   [!] EROARE la conectarea bazei de date: " + e.getMessage());
+            System.out.println("[!] Eroare la conectarea bazei de date: " + e.getMessage());
         }
         return connection;
     }
@@ -39,10 +39,10 @@ public class DatabaseManager {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
-                System.out.println("   [!] Sistem: Conexiunea la Oracle a fost inchisa.");
+                System.out.println("[!] Sistem: Conexiunea la Oracle a fost inchisa.");
             }
         } catch (SQLException e) {
-            System.out.println("   [!] EROARE la inchiderea conexiunii: " + e.getMessage());
+            System.out.println("[!] Eroare la inchiderea conexiunii: " + e.getMessage());
         }
     }
 }

@@ -35,12 +35,13 @@ public class LocatieDbService implements GenericService<Locatie> {
             ps.setString(7, locatie.getTelefonContact());
 
             ps.executeUpdate();
-            System.out.println("   [DB] Locatia " + locatie.getNume() + " a fost salvata cu succes!");
+            System.out.println("[DB] Locatia " + locatie.getNume() + " a fost salvata cu succes!");
         } catch (SQLException ex) {
-            System.out.println("    [!] Eroare la adaugarea locatiei: " + ex.getMessage());
+            System.out.println("[!] Eroare la adaugarea locatiei: " + ex.getMessage());
         }
     }
 
+    // iau locatiile disponibile
     @Override
     public List<Locatie> citeste() {
         List<Locatie> locatii = new ArrayList<>();
@@ -60,11 +61,12 @@ public class LocatieDbService implements GenericService<Locatie> {
                 locatii.add(l);
             }
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la citirea locatiilor: " + e.getMessage());
+            System.out.println("[!] Eroare la citirea locatiilor: " + e.getMessage());
         }
         return locatii;
     }
 
+    // actualizez pretul de inchiriere
     @Override
     public void actualizeaza(Locatie locatie) {
         String sql = "UPDATE LOCATII SET pret = ? WHERE id = ?";
@@ -75,7 +77,7 @@ public class LocatieDbService implements GenericService<Locatie> {
             ps.executeUpdate();
 
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la actualizarea locatiei: " + e.getMessage());
+            System.out.println("[!] Eroare la actualizarea locatiei: " + e.getMessage());
         }
     }
 
@@ -86,10 +88,10 @@ public class LocatieDbService implements GenericService<Locatie> {
 
             ps.setInt(1, id);
             ps.executeUpdate();
-            System.out.println("   [DB] Locatia cu ID " + id + " a fost stearsa.");
+            System.out.println("[DB] Locatia cu ID " + id + " a fost stearsa.");
 
         } catch (SQLException e) {
-            System.out.println("   [!] Eroare la stergerea locatiei: " +  e.getMessage());
+            System.out.println("[!] Eroare la stergerea locatiei: " +  e.getMessage());
         }
     }
 }
